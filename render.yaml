@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: trade-detail
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: |
+      # Install Node.js dependencies and build frontend
+      npm install -g pnpm
+      pnpm install
+      pnpm run build
+      # Install Python dependencies
+      pip install -r server/requirements.txt
+    startCommand: uvicorn server.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: BASE_URL
+        sync: false
+    healthCheckPath: /health
