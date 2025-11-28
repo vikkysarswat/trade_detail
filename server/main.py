@@ -6,8 +6,6 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from starlette.applications import Starlette
-from starlette.routing import Mount
 
 from server.mcp_server import mcp_server, create_sse_transport
 
@@ -59,5 +57,5 @@ app.mount("/mcp", sse_app)
 
 
 if __name__ == "__main__":
-    from mcp_server import mcp_server
-    mcp_server.run(host="0.0.0.0", port=8000)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
