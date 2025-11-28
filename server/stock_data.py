@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 
 try:
     import yfinance as yf
+
     YFINANCE_AVAILABLE = True
 except ImportError:
     YFINANCE_AVAILABLE = False
@@ -35,35 +36,35 @@ def format_currency(value: float) -> str:
 
 def get_stock_data(symbol: str) -> Dict[str, Any]:
     """Get stock data for a given symbol."""
-    
+
     # Add NSE suffix if not present
     if not symbol.endswith(NSE_SUFFIX) and symbol not in INDICES_MAP:
         symbol_with_suffix = f"{symbol.upper()}{NSE_SUFFIX}"
     else:
         symbol_with_suffix = symbol.upper()
-    
+
     if not YFINANCE_AVAILABLE:
         # Return mock data for development
         return _get_mock_stock_data(symbol)
-    
+
     try:
         ticker = yf.Ticker(symbol_with_suffix)
         info = ticker.info
         hist = ticker.history(period="1d")
-        
+
         if hist.empty:
             return _get_mock_stock_data(symbol)
-        
-        current_price = hist['Close'].iloc[-1]
-        open_price = hist['Open'].iloc[-1]
-        high = hist['High'].iloc[-1]
-        low = hist['Low'].iloc[-1]
-        volume = hist['Volume'].iloc[-1]
-        
+
+        current_price = hist["Close"].iloc[-1]
+        open_price = hist["Open"].iloc[-1]
+        high = hist["High"].iloc[-1]
+        low = hist["Low"].iloc[-1]
+        volume = hist["Volume"].iloc[-1]
+
         # Calculate change
         change = current_price - open_price
         change_percent = (change / open_price) * 100 if open_price else 0
-        
+
         return {
             "symbol": symbol.upper(),
             "name": info.get("longName", symbol.upper()),
@@ -78,7 +79,7 @@ def get_stock_data(symbol: str) -> Dict[str, Any]:
             "pe": info.get("trailingPE"),
             "timestamp": datetime.now().isoformat(),
         }
-    
+
     except Exception as e:
         print(f"Error fetching data for {symbol}: {e}")
         return _get_mock_stock_data(symbol)
@@ -91,29 +92,29 @@ def get_multiple_stocks_data(symbols: List[str]) -> List[Dict[str, Any]]:
 
 def get_index_data(index_name: str) -> Dict[str, Any]:
     """Get market index data."""
-    
+
     index_symbol = INDICES_MAP.get(index_name.upper())
     if not index_symbol:
         raise ValueError(f"Unknown index: {index_name}")
-    
+
     if not YFINANCE_AVAILABLE:
         return _get_mock_index_data(index_name)
-    
+
     try:
         ticker = yf.Ticker(index_symbol)
         hist = ticker.history(period="1d")
-        
+
         if hist.empty:
             return _get_mock_index_data(index_name)
-        
-        current_price = hist['Close'].iloc[-1]
-        open_price = hist['Open'].iloc[-1]
-        high = hist['High'].iloc[-1]
-        low = hist['Low'].iloc[-1]
-        
+
+        current_price = hist["Close"].iloc[-1]
+        open_price = hist["Open"].iloc[-1]
+        high = hist["High"].iloc[-1]
+        low = hist["Low"].iloc[-1]
+
         change = current_price - open_price
         change_percent = (change / open_price) * 100 if open_price else 0
-        
+
         return {
             "name": index_name,
             "value": round(current_price, 2),
@@ -123,7 +124,7 @@ def get_index_data(index_name: str) -> Dict[str, Any]:
             "low": round(low, 2),
             "timestamp": datetime.now().isoformat(),
         }
-    
+
     except Exception as e:
         print(f"Error fetching index data for {index_name}: {e}")
         return _get_mock_index_data(index_name)
@@ -131,7 +132,7 @@ def get_index_data(index_name: str) -> Dict[str, Any]:
 
 def search_stocks(query: str) -> List[Dict[str, str]]:
     """Search for stocks by name or symbol."""
-    
+
     # Popular Indian stocks database (simplified)
     popular_stocks = [
         {"symbol": "RELIANCE", "name": "Reliance Industries Ltd"},
@@ -150,24 +151,26 @@ def search_stocks(query: str) -> List[Dict[str, str]]:
         {"symbol": "SUNPHARMA", "name": "Sun Pharmaceutical Industries Ltd"},
         {"symbol": "TITAN", "name": "Titan Company Ltd"},
     ]
-    
+
     query_lower = query.lower()
     results = [
-        stock for stock in popular_stocks
-        if query_lower in stock["symbol"].lower() or query_lower in stock["name"].lower()
+        stock
+        for stock in popular_stocks
+        if query_lower in stock["symbol"].lower()
+        or query_lower in stock["name"].lower()
     ]
-    
+
     return results[:10]  # Return top 10 results
 
 
 def _get_mock_stock_data(symbol: str) -> Dict[str, Any]:
     """Get mock stock data for development/testing."""
     import random
-    
+
     base_price = random.uniform(100, 5000)
     change = random.uniform(-100, 100)
     change_percent = (change / base_price) * 100
-    
+
     return {
         "symbol": symbol.upper(),
         "name": f"{symbol.upper()} Ltd",
@@ -187,18 +190,18 @@ def _get_mock_stock_data(symbol: str) -> Dict[str, Any]:
 def _get_mock_index_data(index_name: str) -> Dict[str, Any]:
     """Get mock index data for development/testing."""
     import random
-    
+
     base_values = {
         "NIFTY50": 22000,
         "NIFTYMIDCAP150": 45000,
         "NIFTYSMLCAP250": 12000,
         "BANKNIFTY": 48000,
     }
-    
+
     base_value = base_values.get(index_name.upper(), 20000)
     change = random.uniform(-500, 500)
     change_percent = (change / base_value) * 100
-    
+
     return {
         "name": index_name,
         "value": round(base_value, 2),

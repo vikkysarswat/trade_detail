@@ -113,22 +113,24 @@ async def list_tools() -> List[Tool]:
 
 
 @mcp_server.call_tool()
-async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent | ImageContent | EmbeddedResource]:
+async def call_tool(
+    name: str, arguments: Dict[str, Any]
+) -> List[TextContent | ImageContent | EmbeddedResource]:
     """Handle tool calls."""
-    
+
     if name == "get_stock_price":
         symbol = arguments.get("symbol")
         if not symbol:
             return [TextContent(type="text", text="Error: Symbol is required")]
-        
+
         try:
             stock_data = get_stock_data(symbol)
             html = create_widget_html("stock-widget", stock_data)
-            
+
             return [
                 TextContent(
                     type="text",
-                    text=f"Current price for {symbol}: ₹{stock_data['price']} ({stock_data['changePercent']:+.2f}%)"
+                    text=f"Current price for {symbol}: ₹{stock_data['price']} ({stock_data['changePercent']:+.2f}%)",
                 ),
                 EmbeddedResource(
                     type="resource",
@@ -137,27 +139,29 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent | 
                         name=f"{symbol} Stock Widget",
                         mimeType="text/html",
                         text=html,
-                    )
+                    ),
                 ),
             ]
         except Exception as e:
-            return [TextContent(type="text", text=f"Error fetching stock data: {str(e)}")]
-    
+            return [
+                TextContent(type="text", text=f"Error fetching stock data: {str(e)}")
+            ]
+
     elif name == "get_multiple_stocks":
         symbols = arguments.get("symbols")
         if not symbols or not isinstance(symbols, list):
             return [TextContent(type="text", text="Error: Symbols array is required")]
-        
+
         try:
             stocks_data = get_multiple_stocks_data(symbols)
             data = {"stocks": stocks_data}
             html = create_widget_html("stock-carousel", data)
-            
+
             summary = f"Displaying {len(symbols)} stocks: " + ", ".join(
                 f"{s['symbol']}: ₹{s['price']} ({s['changePercent']:+.2f}%)"
                 for s in stocks_data
             )
-            
+
             return [
                 TextContent(type="text", text=summary),
                 EmbeddedResource(
@@ -167,25 +171,27 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent | 
                         name="Stock Carousel",
                         mimeType="text/html",
                         text=html,
-                    )
+                    ),
                 ),
             ]
         except Exception as e:
-            return [TextContent(type="text", text=f"Error fetching stocks: {str(e)}")]
-    
+            return [
+                TextContent(type="text", text=f"Error fetching stocks: {str(e)}")
+            ]
+
     elif name == "get_index_data":
         index_name = arguments.get("index_name")
         if not index_name:
             return [TextContent(type="text", text="Error: Index name is required")]
-        
+
         try:
             index_data = get_index_data(index_name)
             html = create_widget_html("index-widget", index_data)
-            
+
             return [
                 TextContent(
                     type="text",
-                    text=f"{index_name}: {index_data['value']:.2f} ({index_data['changePercent']:+.2f}%)"
+                    text=f"{index_name}: {index_data['value']:.2f} ({index_data['changePercent']:+.2f}%)",
                 ),
                 EmbeddedResource(
                     type="resource",
@@ -194,30 +200,38 @@ async def call_tool(name: str, arguments: Dict[str, Any]) -> List[TextContent | 
                         name=f"{index_name} Index Widget",
                         mimeType="text/html",
                         text=html,
-                    )
+                    ),
                 ),
             ]
         except Exception as e:
-            return [TextContent(type="text", text=f"Error fetching index data: {str(e)}")]
-    
+            return [
+                TextContent(type="text", text=f"Error fetching index data: {str(e)}")
+            ]
+
     elif name == "search_stocks":
         query = arguments.get("query")
         if not query:
             return [TextContent(type="text", text="Error: Query is required")]
-        
+
         try:
             results = search_stocks(query)
             if not results:
-                return [TextContent(type="text", text=f"No stocks found matching '{query}'")]
-            
+                return [
+                    TextContent(
+                        type="text", text=f"No stocks found matching '{query}'"
+                    )
+                ]
+
             result_text = f"Found {len(results)} stocks matching '{query}':\\n\\n"
             for stock in results:
                 result_text += f"• {stock['symbol']} - {stock['name']}\\n"
-            
+
             return [TextContent(type="text", text=result_text)]
         except Exception as e:
-            return [TextContent(type="text", text=f"Error searching stocks: {str(e)}")]
-    
+            return [
+                TextContent(type="text", text=f"Error searching stocks: {str(e)}")
+            ]
+
     else:
         return [TextContent(type="text", text=f"Unknown tool: {name}")]
 
